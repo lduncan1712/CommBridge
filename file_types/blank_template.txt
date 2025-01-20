@@ -1,0 +1,93 @@
+import json
+from .template import template
+from datetime import datetime
+
+class discord(template):
+
+    def __init__(self, file, file_name):
+
+        super().__init__(file, file_name)
+
+        self.reply_type =             
+        self.outer_reaction_type =    
+        self.inner_reactions = 
+        self.call_type =           
+        self.chronological =       
+        self.multi_room =          
+
+        self.process()
+    
+
+
+
+
+
+    def is_instance(open_file: Union[Dict,List], file_name: str) -> bool:
+        pass
+
+
+    def get_datetime_format(self,datetime:Any) -> Any:
+        pass
+
+
+    def get_comms(self) -> List:
+        pass
+
+
+    def get_participants(self) -> set[(str,str)]:
+        pass
+
+
+    def get_comm_sender(self,comm:Any) -> str:
+        pass
+
+
+    def get_comm_time(self,comm:Any) -> Any:
+        pass
+
+ 
+    def get_call_end_time(self,comm:Any) -> Any:
+        pass
+
+   
+    def get_comm_id(self,comm:Any) -> str:
+        pass
+
+
+    def get_comm_message(self,comm:Any) -> str:
+        pass
+
+
+    def get_comm_call(self,comm:Any) -> Optional[str]:
+        pass
+
+
+    def get_comm_media(self,comm:Any) -> Optional[Dict[str,str]]:
+        pass
+
+
+    def get_comm_sticker_gif(self,comm:Any) -> Optional[str]:
+        pass
+
+    def get_comm_native(self,comm:Any) -> Optional[Dict[str,str]]:
+        pass
+
+    def get_comm_reaction(self,comm:Any) -> Optional[str]:
+        pass
+
+    def get_comm_removed(self,comm:Any) -> Optional[str]: 
+        pass
+
+    def get_comm_alter(self,comm:Any) -> Optional[str]:
+        pass
+
+    def get_comm_link(self,comm:Any) -> Optional[Dict[str,str]]:
+        pass
+
+    def get_comm_root(self,comm:Any,comm_type:int) -> Optional[str]:
+        pass
+
+    def get_inner_reactions(self, comm: Any) -> Optional[List[Dict]]:
+        pass
+
+        

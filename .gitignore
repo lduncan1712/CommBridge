@@ -1,0 +1,10 @@
+data/
+
+data/discord
+data/instagram
+data/message
+
+__pycache__
+databsase/__pycache__
+
+database/db_creds.json
