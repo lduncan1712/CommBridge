@@ -20,4 +20,5 @@ INSERT INTO communication_type(id, name) VALUES (-1, 'UNAVAILABLE_MEDIA'),
 												(4, 'NATIVE_MEDIA'),
 												(5, 'REACTION'),
 												(6, 'ALTER'), 
-												(7, 'LINK');
+												(7, 'LINK'),
+												(8, 'DELETED_NATIVE');

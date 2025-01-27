@@ -43,19 +43,36 @@ class message(template):
    
     def get_participants(self):
 
-        participants = {(row[8],row[7]) for row in self.comms 
-                            if row[7] != ""}
+        participants = {(self.clean_participants(row[8]),
+                        None, 
+                        self.clean_participants((row[7]))) for row in self.comms}
 
         #Since Self Is Represented As Blank In This Form
-        participants.add(("_____", ""))
+        participants.add(("You", None, "You"))
 
-        print(participants)
+        #print("PARTS")
+        #print(participants)
         
         return participants
 
+    def clean_participants(self,name:str) -> str:
+        
+        if len(name) == 12 and name[0] == "+":
+            name = name[1:]
+
+        #Starts With 1
+        if len(name) == 11 and name[0] == 1 and name.isdigit():
+            name = name[1:]
+
+        return name
+
   
-    def get_comm_sender(self,comm):
-        return comm[7]
+    def get_comm_sender(self,comm,comm_type:int):
+
+        if comm[7] == "":
+            return "You"
+        return self.clean_participants(comm[7])
+
 
     def get_comm_time(self,comm):
         return comm[1]
@@ -100,13 +117,15 @@ class message(template):
                 return "👎"
 
     def get_comm_removed(self,comm): 
-        pass
+        if comm[6] == 'Notification':
+            return comm[12]
 
     def get_comm_alter(self,comm):
         text = comm[12]
 
         if ("added" in text and " to the conversation." in text) or \
-            ("removed" in text and " from the conversation." in text):
+            ("removed" in text and " from the conversation." in text) or \
+                ("named the conversation '" in text and "'." in text):
             return text
         
    

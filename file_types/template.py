@@ -14,6 +14,7 @@ class template:
     COMM_REACTION = 5      #Reaction
     COMM_ALTER = 6         #Modification To Chat
     COMM_LINK = 7          #Linking Website/App
+    COMM_DELETED_NATIVE = 8
 
 
     #Communication Connection Format
@@ -49,12 +50,13 @@ class template:
 
         self.TYPE_RESPONSE_DICTIONARY = {
             template.COMM_CALL: self.get_comm_call,
+            template.COMM_ALTER: self.get_comm_alter,
             template.COMM_REMOVED: self.get_comm_removed,
             template.COMM_MEDIA: self.get_comm_media,
             template.COMM_STICKER_GIF: self.get_comm_sticker_gif,
+            template.COMM_DELETED_NATIVE: self.get_comm_deleted_native,
             template.COMM_NATIVE_MEDIA: self.get_comm_native,
             template.COMM_REACTION: self.get_comm_reaction,
-            template.COMM_ALTER: self.get_comm_alter,
             template.COMM_LINK: self.get_comm_link,
             template.COMM_MESSAGE: self.get_comm_message
         }
@@ -115,7 +117,7 @@ class template:
 
         time_sent = self.get_datetime_format(self.get_comm_time(comm))
 
-        sender = self.participant_legend[self.get_comm_sender(comm)]
+        
 
         native_id = self.get_comm_id(comm)
 
@@ -130,6 +132,8 @@ class template:
                 comm_type = key
                 content = result
                 break
+
+        sender = self.participant_legend[self.get_comm_sender(comm,comm_type)]
 
 
         
@@ -258,11 +262,16 @@ class template:
         #Obtain The Info Of Participants
         self.participants = self.get_participants()
 
+        #print("PAR:")
+        #print(self.participants)
+
         #Create A Legend For Their IDS
         self.participant_legend = database.set_participant_legend(self.participants,self.platform_id)
 
+        #print(self.participant_legend)
+
         #Store The Room Number This Data Is Going Into
-        self.room_id = database.set_room_participation(self.participant_legend, self.platform_id)
+        self.room_id = database.set_room_participation(self.participant_legend, self.platform_id,self.file_name)
 
         #Upload The Core Communication
         self.upload_comms()
@@ -314,12 +323,21 @@ class template:
     Returns any participants within this file
 
     Return:
-        List[(str,str)]: "common_name": name of each participant
-                        "native_name": the name by which they are internally referenced              
+        A list of participants, each with a name, username, and native name: the name
+        by which they are internally referenced
     """
-    def get_participants(self) -> set[(str,str)]:
+    def get_participants(self) -> set[(str,str,str)]:
         pass
 
+
+    """
+    Returns Cleaned Participant Information
+
+    Returns:
+        the cleanest participant
+    """
+    def clean_participants(self,name:str) -> str:
+        pass
 
 
     #""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -338,7 +356,7 @@ class template:
     """
     Returns The Internally Referenced Identify Of This Communication's Sender
     """
-    def get_comm_sender(self,comm:Any) -> str:
+    def get_comm_sender(self,comm:Any,comm_type:int) -> str:
         pass
 
     """
@@ -426,6 +444,12 @@ class template:
                 ["location"]: the link/location of this media
     """
     def get_comm_link(self,comm:Any) -> Optional[Dict[str,str]]:
+        pass
+
+    """
+    The content of a piece of native media removed
+    """
+    def get_comm_deleted_native(self,comm:Any) -> Optional[str]:
         pass
 
     """

@@ -51,13 +51,17 @@ def upload_file(path,type=None):
 
 def upload(path,type=None):
 
+    #print(f"UPLOADING: {path}")
+
 
     #File
     if os.path.isfile(path):
+        #print("FILE")
         upload_file(path, type)
 
     #Folder
     elif os.path.isdir(path):
+        #print("FOLDER")
 
         for item in os.listdir(path):
             full = os.path.join(path,item)

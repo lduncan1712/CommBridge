@@ -34,7 +34,7 @@ class discord(template):
         pass
 
 
-    def get_participants(self) -> set[(str,str)]:
+    def get_participants(self) -> set[(str,str,str)]:
         pass
 
 

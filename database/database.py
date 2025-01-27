@@ -33,15 +33,14 @@ def get_or_set_platform(name):
 
     return result[0]
     
-def get_or_set_participant(name,native_name,platform):
+def get_or_set_participant(name,username,native_name,platform):
 
     #Find Matching ID
     cur.execute("SELECT id FROM participant where native_id = %s and platform = %s", (native_name,platform,))
     result = cur.fetchone()
 
-    #If No ID
     if result is None:
-        cur.execute("INSERT INTO participant(name,native_id,platform) VALUES (%s, %s, %s) RETURNING id", (name,native_name,platform))
+        cur.execute("INSERT INTO participant(username, name,native_id,platform) VALUES (%s, %s, %s, %s) RETURNING id", (username, name,native_name,platform))
         result = cur.fetchone()
         myConn.commit()
       
@@ -54,14 +53,18 @@ def get_or_set_participant(name,native_name,platform):
 def set_participant_legend(participants,platform):
 
     legend = {}
-    for name, native in participants:
-        legend[native] = get_or_set_participant(name,native, platform)
+    for name, username, native, in participants:
+
+        if native is None or native == "":
+            continue
+
+        legend[native] = get_or_set_participant(name,username,native, platform)
 
     return legend
 
-def set_room_participation(participant_legend, platform):
+def set_room_participation(participant_legend, platform,name):
 
-    cur.execute("""INSERT INTO room(platform) VALUES (%s) RETURNING id""", (platform,))
+    cur.execute("""INSERT INTO room(platform,name) VALUES (%s,%s) RETURNING id""", (platform,name))
     result = cur.fetchone()[0]
     myConn.commit()
 
@@ -76,7 +79,7 @@ def set_room_participation(participant_legend, platform):
 
 def get_row_matching(platform, room, native_id=None, content=None):
 
-    print("ROW MATCHING")
+    #print("ROW MATCHING")
     
     #Using ID
     if not native_id is None:
@@ -88,19 +91,19 @@ def get_row_matching(platform, room, native_id=None, content=None):
 
     #Using Content Field
     elif not content is None:
-        print(f"CONTENT: {content}")
+        #print(f"CONTENT: {content}")
         cur.execute("""
             SELECT id from communication where platform = %s and room = %s and
             content LIKE %s ORDER BY time_sent DESC LIMIT 1
         """, (platform, room, '%' + content.strip() + '%'))
         attempt = cur.fetchone()
 
-        print(f"RESULT: {attempt}")
+        #print(f"RESULT: {attempt}")
 
     else:
         ...
 
-    print(attempt)
+    #print(attempt)
 
     return attempt
 

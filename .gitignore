@@ -8,3 +8,10 @@ __pycache__
 databsase/__pycache__
 
 database/db_creds.json
+
+personal_contact.json
+output/
+output_split/
+
+out.csv
+mods.txt

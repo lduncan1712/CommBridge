@@ -30,7 +30,7 @@ class discord(template):
         return self.file["messages"]
 
     def get_participants(self):
-        return {(message["author"]["name"], message["author"]["id"]) for message in self.comms}
+        return {(message["author"]["name"], message["author"]["nickname"], message["author"]["id"]) for message in self.comms}
 
 
     def get_datetime_format(self,time):
@@ -42,7 +42,10 @@ class discord(template):
         except:
             return datetime.strptime(time, '%Y-%m-%dT%H:%M:%S%z')
 
-    def get_comm_sender(self,comm):
+    def clean_participants(self,name:str) -> str:
+        return name
+
+    def get_comm_sender(self,comm,comm_type):
         return comm["author"]["id"]
 
     def get_comm_time(self,comm):

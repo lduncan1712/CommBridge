@@ -1,5 +1,6 @@
 import database.database as database
-import json, emoji
+import json, emoji,os
+from os.path import basename, dirname
 from datetime import datetime, timedelta, timezone
 
 from .template import template
@@ -42,26 +43,41 @@ class instagram(template):
 
     def get_participants(self):
         
-        return {(item["sender_name"], item["sender_name"]) for item in self.comms} | \
-                {(item["name"], item["name"]) for item in self.file["participants"]}
+        parts = {(item["sender_name"], None, item["sender_name"]) for item in self.comms} | \
+                {(item["name"], None, item["name"]) for item in self.file["participants"]}
 
+        return parts
+
+        
     def get_comms(self):
         return self.file["messages"]
 
     def get_datetime_format(self,date):
 
+        #print(date)
         if not date is None:
-        
-            dt_in_secs = date/1000
+            
+            
+
+            if date > 999999999999:
+                dt_in_secs = date/1000
+            else:
+                dt_in_secs = date
 
             time_delta = timedelta(seconds=dt_in_secs)
 
             # Create a datetime object representing the epoch (1970-01-01 00:00:00 UTC)
             epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
 
-            return epoch + time_delta
+            new_v =  epoch + time_delta
+            #print(new_v)
 
-    def get_comm_sender(self,comm):
+            return new_v
+
+    def clean_participants(self,name:str) -> str:
+        return name
+
+    def get_comm_sender(self,comm,comm_type):
         return comm["sender_name"]
 
     def get_comm_time(self,comm):
@@ -93,7 +109,8 @@ class instagram(template):
     def get_comm_media(self,comm):
         if "photos" in comm:
             return [{"content":media.get("uri"), "location":media.get("backup_uri")} for media in comm["photos"]]
-            
+        elif "videos" in comm:
+            return [{"content":media.get("uri"), "location":media.get("backup_uri")} for media in comm["videos"]]
 
     def get_comm_sticker_gif(self,comm):
         pass
@@ -107,31 +124,46 @@ class instagram(template):
             }
             
     def get_comm_reaction(self,comm):
-        if "content" in comm and comm["content"] == "Liked a message":
-            return comm["content"]
+        if "content" in comm:
+            #Owner Liked
+            if comm["content"] == "Liked a message":
+                return comm["content"]
+
+            #Anouther Person
+            elif  " liked a message" in comm["content"]:
+                return comm["content"]
+            
+            #
+            elif "eacted " in comm["content"] and " to your message" in comm["content"]:
+
+                s1 = comm["content"].split("eacted ")[1]
+                s2 = s1.split(" to")[0]
+
+                return s2
+
+    
+                
 
 
-    def get_comm_removed(self,comm):  
+    def get_comm_deleted_native(self,comm):
 
-  
-        #no share and no content
+        #no share
         if all(key not in comm for key in ["share", "video", "photos"]):
             
-            if not "content" in comm:
+            #no content or says sent 
+            if not "content" in comm or " sent an attachment" in comm["content"]:
                 return "deleted"
 
-        #some share
-        elif "share" in comm:
-
-            if not "link" in comm["share"]:
+        #some share, nothing inside
+        if "share" in comm and not "link" in comm["share"]:
                 return "removed"
-            
 
 
     def get_comm_alter(self,comm):
         
         if "content" in comm:
-            if any(s in comm["content"] for s in [ " left the group.", "to the group."]):
+            if any(s in comm["content"] for s in [ " left the group.", " to the group.", " named the group ", 
+                                                    " created the group.", " changed the theme to", "changed the group photo."]):
                 return comm["content"]
 
     def get_comm_link(self,comm):
