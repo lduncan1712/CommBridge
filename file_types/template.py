@@ -333,6 +333,9 @@ class template:
     """
     Returns Cleaned Participant Information
 
+    Args: 
+        name: the unclean name to be remade (IE: +1905... -> 905)
+
     Returns:
         the cleanest participant
     """

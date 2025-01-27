@@ -17,8 +17,6 @@ class discord(template):
 
         self.process()
         
-
-
     def is_instance(open_file, file_name):
         try:
             if "guild" in open_file:
@@ -31,7 +29,6 @@ class discord(template):
 
     def get_participants(self):
         return {(message["author"]["name"], message["author"]["nickname"], message["author"]["id"]) for message in self.comms}
-
 
     def get_datetime_format(self,time):
 

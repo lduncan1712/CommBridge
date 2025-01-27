@@ -83,14 +83,9 @@ class instagram(template):
     def get_comm_time(self,comm):
         return comm["timestamp_ms"]
 
-    def get_comm_id(self,comm):
-        pass
 
     def get_call_end_time(self,comm):
         return comm["timestamp_ms"]
-
-    def get_comm_root(self,comm,comm_type):
-        pass
 
 
     def get_comm_message(self,comm):
@@ -141,10 +136,6 @@ class instagram(template):
 
                 return s2
 
-    
-                
-
-
     def get_comm_deleted_native(self,comm):
 
         #no share
@@ -157,7 +148,6 @@ class instagram(template):
         #some share, nothing inside
         if "share" in comm and not "link" in comm["share"]:
                 return "removed"
-
 
     def get_comm_alter(self,comm):
         

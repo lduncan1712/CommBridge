@@ -81,9 +81,6 @@ class phone(template):
         end_datetime = time + time_quantity
 
         return end_datetime
-   
-    def get_comm_id(self,comm):
-        return None
 
     def get_comm_call(self,comm):
         return comm[6]

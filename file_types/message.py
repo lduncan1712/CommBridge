@@ -77,19 +77,10 @@ class message(template):
     def get_comm_time(self,comm):
         return comm[1]
 
-    def get_call_end_time(self,comm):
-        pass
-
-    def get_comm_id(self,comm):
-        pass
-
     def get_comm_message(self,comm):
         if self.get_comm_media(comm) is None and \
             self.get_comm_reaction(comm) is None:
                 return comm[12]
-
-    def get_comm_call(self,comm):
-        pass
 
 
     def get_comm_media(self,comm):
@@ -97,9 +88,6 @@ class message(template):
             return {"content":comm[13],"location":None}
 
     def get_comm_sticker_gif(self,comm):
-        pass
-
-    def get_comm_native(self,comm):
         pass
 
     def get_comm_reaction(self,comm):
@@ -183,7 +171,3 @@ class message(template):
             return None
 
         return inner_portion.strip()
-
-
-    def get_inner_reactions(self, comm):
-        pass
