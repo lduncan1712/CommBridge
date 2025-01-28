@@ -124,6 +124,37 @@ def set_communication(data):
 
 
 
+def upload_contact(contacts):
+
+    cur.execute("SELECT id, name from platform")
+
+    dictionary = {row[1]:row[0] for row in cur.fetchall()}
+
+    for contact in contacts:
+
+        cur.execute("SELECT id from super_participant where name = %s", (contact["preferred"],))
+
+        id = cur.fetchone()
+
+        if id is None:
+            cur.execute("INSERT INTO super_participant(name,family) VALUES (%s, %s) returning id", (contact["preferred"],bool(contact["family"])))
+            id = cur.fetchone()
+
+
+
+        for comm_type in ["discord","instagram","message","phone"]:
+            if comm_type in contact:
+                comm_id = dictionary[comm_type]
+                print("DO")
+                query = f"UPDATE participant SET super_participant = %s where native_id = %s and platform = %s"
+                for account in contact[comm_type]:
+                    cur.execute(query, (id, account,comm_id))
+                myConn.commit()
+        myConn.commit()
+
+
+        
+
 
 
 

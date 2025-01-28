@@ -67,8 +67,11 @@ class discord(template):
         return [{"content":attach["url"], "location":None} for attach in comm["attachments"]]
         
     def get_comm_sticker_gif(self,comm):
-        return [embed["url"] for embed in comm["embeds"] if ("https://cdn.discordapp.com" in embed["url"]) or \
+        if comm["embeds"]:
+            return [embed["url"] for embed in comm["embeds"] if ("https://cdn.discordapp.com" in embed["url"]) or \
                                                             ("https://tenor.com" in embed["url"])]
+        if comm["stickers"]:
+            return [sticker["sourceUrl"] for sticker in comm["stickers"]]
         
     def get_comm_alter(self,comm):
         if comm["type"] in ["RecipientAdd", "ChannelPinnedMessage","ChannelNameChange"]:

@@ -56,12 +56,14 @@ class message(template):
         return participants
 
     def clean_participants(self,name:str) -> str:
+
+        name = name.strip()
         
         if len(name) == 12 and name[0] == "+":
             name = name[1:]
 
         #Starts With 1
-        if len(name) == 11 and name[0] == 1 and name.isdigit():
+        if len(name) == 11 and name[0] == "1" and name.isdigit():
             name = name[1:]
 
         return name
