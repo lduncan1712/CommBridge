@@ -2,7 +2,6 @@ from database import database
 import json
 import argparse
 
-
 def upload_contact(input_path):
 
     with open(input_path, 'r') as file:

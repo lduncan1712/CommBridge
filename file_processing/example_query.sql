@@ -1,9 +1,12 @@
-
 SELECT 
+	pp.id,
+	p.name,
     pp.name AS participant_name,
+	pp.super_participant,
+	pp.username As user_name,
     pp.native_id,
-    r.name AS room_name_with_fewest_participants,
-	p.name
+    RIGHT(r.name,50) AS room_name_with_fewest_participants
+
 FROM 
     participant pp
 INNER JOIN 

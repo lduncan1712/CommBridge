@@ -13,3 +13,5 @@ python upload.py --path "data\\person_calls"
 
 #NOTE: uploading contacts is optional for cases, where major communications occur
 python -m file_processing.upload_contact --input "personal_contact.json"
+
+#NOTE: add your formats here

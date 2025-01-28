@@ -10,7 +10,7 @@
 - Instagram Messages    &emsp;&emsp;      (instagram.py)  &emsp;&emsp;  (.json, accessible: ["Instagram Internal Feature"](https://help.instagram.com/181231772500920?helpref=faq_content))
 - Discord Channels/Chats  &emsp;&emsp;    (discord.py)    &emsp;&emsp;  (.json, accessible: ["External Export"](https://github.com/Tyrrrz/DiscordChatExporter))
 - iMessage Conversations   &emsp;&emsp;   (message.py)  &emsp;&emsp;    (.csv, accessible: ["External_Export"](https://imazing.com/?gad_source=1&gclid=Cj0KCQiA4rK8BhD7ARIsAFe5LXI2fRIOXAeXx6rRsIZKdtzp7in7nZ4BfblS6rEu-z7QCjRuqnR6sf0aAoXMEALw_wcB))
-- iPhone Call Logs:  &emsp;&emsp;&emsp;&emsp;&emsp; (coming soon)
+- iPhone Call Logs:  &emsp;&emsp;&emsp;&emsp;&emsp; (added)
 
 
 ## Setup + Example Use:

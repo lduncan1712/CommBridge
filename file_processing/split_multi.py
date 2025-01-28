@@ -13,7 +13,7 @@ def split_multi(file_path, output_folder):
     for group_value, group_df in grouped:
 
         if len(group_value) > 15 or group_value.startswith("discord"):
-            print("PASSING")
+            #Assumes to be invalid phone number (or other platform call)
             continue
         
         output_file = os.path.join(output_folder, f"{group_value.replace('*', '_')}.csv")

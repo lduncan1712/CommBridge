@@ -1,4 +1,4 @@
-
+-- Speeds Up Deletion
 TRUNCATE room_participation,
          communication,
          participant,
@@ -8,6 +8,7 @@ TRUNCATE room_participation,
          communication_type
          CASCADE;
 
+-- Readds Key Rows and Types
 INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),
 											  (-1, 'REMOVED (-1)');
 

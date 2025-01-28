@@ -18,11 +18,6 @@ def combine_files(input_folder, output_file):
     combined_df.to_csv(output_file, index=False)
 
 
-
-
-
-
-
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--input", type=str, required=True)
