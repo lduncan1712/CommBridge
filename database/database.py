@@ -153,6 +153,9 @@ def upload_contact(contacts):
         myConn.commit()
 
 
+    #TODO: mark all others as non?
+
+
         
 
 
