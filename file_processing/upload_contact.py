@@ -6,12 +6,9 @@ import argparse
 def upload_contact(input_path):
 
     with open(input_path, 'r') as file:
-        data = json.load(file)  # Load the JSON data
-
+        data = json.load(file) 
 
     database.upload_contact(data)
-
-
 
 parser = argparse.ArgumentParser()
 

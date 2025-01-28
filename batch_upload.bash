@@ -11,6 +11,5 @@ python file_processing\\combine_files.py --input "C:\\Users\\ldunc\\OneDrive\\Do
 python file_processing\\split_multi.py --input "data\\joined_calls.csv" --output "data\\person_calls"
 python upload.py --path "data\\person_calls"
 
-
 #NOTE: uploading contacts is optional for cases, where major communications occur
 python -m file_processing.upload_contact --input "personal_contact.json"
