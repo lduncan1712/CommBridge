@@ -268,7 +268,8 @@ class template:
         #Create A Legend For Their IDS
         self.participant_legend = database.set_participant_legend(self.participants,self.platform_id)
 
-        #print(self.participant_legend)
+        
+        print(self.participant_legend)
 
         #Store The Room Number This Data Is Going Into
         self.room_id = database.set_room_participation(self.participant_legend, self.platform_id,self.file_name)

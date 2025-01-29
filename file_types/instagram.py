@@ -29,7 +29,7 @@ class instagram(template):
     def get_inner_reactions(self,comm):
 
         if "reactions" in comm:
-            return [{"content":reaction["reaction"], "participant":reaction["actor"], "datetime":reaction.get("timestamp")} for reaction in comm["reactions"]]
+            return [{"content":reaction["reaction"], "participant":self.clean_participants(reaction["actor"]), "datetime":reaction.get("timestamp")} for reaction in comm["reactions"]]
     
 
     def is_instance(open_file, file_name):
@@ -43,9 +43,9 @@ class instagram(template):
 
     def get_participants(self):
         
-        parts = {(item["sender_name"], None, item["sender_name"]) for item in self.comms} | \
-                {(item["name"], None, item["name"]) for item in self.file["participants"]}
-
+        parts = {(item["sender_name"], None, self.clean_participants(item["sender_name"])) for item in self.comms} | \
+                {(item["name"], None, self.clean_participants(item["name"])) for item in self.file["participants"]}
+        print(parts)
         return parts
 
         
@@ -75,10 +75,17 @@ class instagram(template):
             return new_v
 
     def clean_participants(self,name:str) -> str:
+
+        if name == "Instagram User" and "instagramuser_" in self.file_name:
+            new_name =  name + self.file_name[-31:-15]
+            #print(new_name)
+            return new_name
         return name
 
+
+
     def get_comm_sender(self,comm,comm_type):
-        return comm["sender_name"]
+        return self.clean_participants(comm["sender_name"])
 
     def get_comm_time(self,comm):
         return comm["timestamp_ms"]
@@ -130,11 +137,8 @@ class instagram(template):
             
             #
             elif "eacted " in comm["content"] and " to your message" in comm["content"]:
+                return comm["content"].split("eacted ")[1].split(" to")[0]
 
-                s1 = comm["content"].split("eacted ")[1]
-                s2 = s1.split(" to")[0]
-
-                return s2
 
     def get_comm_deleted_native(self,comm):
 
