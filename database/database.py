@@ -1,4 +1,4 @@
-import psycopg2, json, sys
+import psycopg2, json, sys, argparse
 
 # Opens database connection using credentials
 with open("database/db_creds.json", 'r') as creds:
@@ -186,9 +186,8 @@ def clear_directional():
     """)
     myConn.commit()
 
-if __name__ == "__main__":
 
-    function_name = sys.argv[1]
+
 
 
 
