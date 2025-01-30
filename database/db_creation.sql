@@ -22,6 +22,18 @@ CREATE TABLE IF NOT EXISTS super_participant(
 );
 
 /*
+	Represents A Communication Space With The Same Individuals Over Multiple Platforms
+*/
+CREATE TABLE IF NOT EXISTS super_room(
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(1000),
+	super_participant_group INT[]
+);
+
+
+
+
+/*
 	Represents An Individual Account Involved Within Communication In A Platform
 
 	IE: instagram_account_123
@@ -44,7 +56,10 @@ CREATE TABLE IF NOT EXISTS room(
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(1000),
 	platform INT REFERENCES platform(id) ON DELETE CASCADE,
-	room_creation_date TIMESTAMP
+	super_room INT REFERENCES super_room(id) ON DELETE CASCADE,
+	room_creation_date TIMESTAMP,
+	participant_list INT[],
+	super_participant_list INT[]
 );
 
 /*
@@ -82,7 +97,9 @@ CREATE TABLE IF NOT EXISTS communication(
 	reply INT REFERENCES communication(id) ON DELETE CASCADE,    -- any communication this is responding to
 	platform INT REFERENCES platform(id) ON DELETE CASCADE,      
 	participant INT REFERENCES participant(id) ON DELETE CASCADE,
-	room INT REFERENCES room(id) ON DELETE CASCADE
+	room INT REFERENCES room(id) ON DELETE CASCADE,
+
+	weight INT
 );
 
 INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),  --case when comm unknown (for reply)

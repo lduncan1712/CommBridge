@@ -18,5 +18,11 @@ if args.function == "upload_contact":
 elif args.function == "clear_directional":
     database.clear_directional()
 
+elif args.function == "set_weights":
+    database.set_weights()
+
+elif args.function == "generate_super_rooms":
+    database.generate_super_rooms()
+
 else:
     print("Invalid Function Entered")

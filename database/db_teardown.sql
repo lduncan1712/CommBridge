@@ -1,3 +1,22 @@
+
+
+
+
+-- First, drop tables with foreign key references
+DROP TABLE IF EXISTS communication;
+DROP TABLE IF EXISTS room_participation;
+DROP TABLE IF EXISTS room;
+DROP TABLE IF EXISTS participant;
+
+-- Then drop tables without dependencies
+DROP TABLE IF EXISTS communication_type;
+DROP TABLE IF EXISTS super_room;
+DROP TABLE IF EXISTS super_participant;
+DROP TABLE IF EXISTS platform;
+
+
+
+
 -- Speeds Up Deletion
 TRUNCATE room_participation,
          communication,
@@ -7,6 +26,7 @@ TRUNCATE room_participation,
          super_participant,
          communication_type
          CASCADE;
+
 
 -- Readds Key Rows and Types
 INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),

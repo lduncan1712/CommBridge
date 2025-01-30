@@ -74,7 +74,7 @@ class discord(template):
             return [sticker["sourceUrl"] for sticker in comm["stickers"]]
         
     def get_comm_alter(self,comm):
-        if comm["type"] in ["RecipientAdd", "ChannelPinnedMessage","ChannelNameChange"]:
+        if comm["type"] in ["RecipientAdd", "ChannelPinnedMessage","ChannelNameChange","ChannelIconChange"]:
             return comm["content"]
 
     def get_comm_link(self,comm):
