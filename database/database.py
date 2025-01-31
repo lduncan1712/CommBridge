@@ -47,9 +47,6 @@ def get_or_set_participant(name,username,native_name,platform):
 
     return result[0]
 
-
-
-
 def set_participant_legend(participants,platform):
 
     legend = {}
@@ -74,8 +71,6 @@ def set_room_participation(participant_legend, platform,name):
     myConn.commit()
 
     return result
-
-
 
 def get_row_matching(platform, room, native_id=None, content=None):
 
@@ -107,7 +102,6 @@ def get_row_matching(platform, room, native_id=None, content=None):
 
     return attempt
 
-
 def set_communication(data):
 
     cur.execute("""
@@ -124,7 +118,7 @@ def set_communication(data):
 
 #------------------------------------------------------------------
 
-def upload_contact(contacts):
+def contact_setup(contacts):
 
     cur.execute("SELECT id, name from platform")
 
@@ -155,41 +149,16 @@ def upload_contact(contacts):
 
     #TODO: mark all others as non?
 
+#------------------------------------------------------
 
 
-
-    
-
-def clear_directional():
-    cur.execute("""
-        
-        DELETE FROM participant
-            WHERE id IN (
-                SELECT participant_id
-            FROM (
-                SELECT 
-            p.id AS participant_id,
-            COUNT(DISTINCT sp.id) AS unique_super_participants_with_communications
-        FROM 
-            participant p
-        JOIN 
-            room_participation rp ON p.id = rp.participant
-        LEFT JOIN 
-            communication c ON rp.room = c.room
-        LEFT JOIN 
-            room_participation rp_others ON rp.room = rp_others.room
-        LEFT JOIN 
-            participant p_comm ON c.participant = p_comm.id
-        LEFT JOIN 
-            super_participant sp ON p_comm.super_participant = sp.id
-        GROUP BY 
-            p.id
-        HAVING 
-            COUNT(DISTINCT sp.id) = 0
-        ) AS subquery
-        );
-    """)
+def apply_query(args):
+    cur.execute(args)
     myConn.commit()
+
+
+
+
 
 
 def set_weights():

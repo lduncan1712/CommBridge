@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS room(
 	A Marker Of Participants Within A Room
 */
 CREATE TABLE room_participation(
-	room INT REFERENCES room(id),
+	room INT REFERENCES room(id) ON DELETE CASCADE,
 	participant INT REFERENCES participant(id) ON DELETE CASCADE,
 	date_of_entry TIMESTAMP,
 	PRIMARY KEY (room, participant)
@@ -99,8 +99,33 @@ CREATE TABLE IF NOT EXISTS communication(
 	participant INT REFERENCES participant(id) ON DELETE CASCADE,
 	room INT REFERENCES room(id) ON DELETE CASCADE,
 
+
+
+
 	weight INT
+
 );
+
+
+
+-- CREATE TABLE IF NOT EXISTS super_room_daily_aggregate(
+-- 	day DATE,
+
+-- )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),  --case when comm unknown (for reply)
 											  (-1, 'REMOVED (-1)');  --case when comm removed (for reply)
