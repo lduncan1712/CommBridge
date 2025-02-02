@@ -118,10 +118,10 @@ def set_communication(data):
 
 #------------------------------------------------------------------
 
-def contact_setup(contacts):
+def build_manual_superparticipants(contacts):
 
+    #INSERTING SUPER PARTICIPANT
     cur.execute("SELECT id, name from platform")
-
     dictionary = {row[1]:row[0] for row in cur.fetchall()}
 
     for contact in contacts:
@@ -131,33 +131,27 @@ def contact_setup(contacts):
         id = cur.fetchone()
 
         if id is None:
-            cur.execute("INSERT INTO super_participant(name,family) VALUES (%s, %s) returning id", (contact["preferred"],bool(contact["family"])))
+            cur.execute("INSERT INTO super_participant(name,family,manually_added) VALUES (%s, %s, %s) returning id", (contact["preferred"],bool(contact["family"]), True))
             id = cur.fetchone()
-
-
 
         for comm_type in ["discord","instagram","message","phone"]:
             if comm_type in contact:
                 comm_id = dictionary[comm_type]
-                print("DO")
                 query = f"UPDATE participant SET super_participant = %s where native_id = %s and platform = %s"
                 for account in contact[comm_type]:
                     cur.execute(query, (id, account,comm_id))
                 myConn.commit()
         myConn.commit()
 
-
-    #TODO: mark all others as non?
-
 #------------------------------------------------------
 
+def apply_query(query_path):
 
-def apply_query(args):
-    cur.execute(args)
+    with open(query_path, 'r') as file:
+        query = file.read()
+
+    cur.execute(query)
     myConn.commit()
-
-
-
 
 
 

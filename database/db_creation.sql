@@ -1,10 +1,6 @@
-CREATE DATABASE socialdb
-
 
 /*
 	Represents A Unique Location/Source For Data
-
-	IE: 'Instagram', 'Discord', 'imessage'
 */
 CREATE TABLE IF NOT EXISTS platform(
 	id SERIAL PRIMARY KEY,
@@ -12,13 +8,14 @@ CREATE TABLE IF NOT EXISTS platform(
 );
 
 /*
-	Represents A Person Who Can Participate In Communication Within Multiple Platforms, Rooms
+	Stores A Person, Whose Ownership Links Multiple participants
 */
 CREATE TABLE IF NOT EXISTS super_participant(
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(100),
 	gender VARCHAR(1),
-	family BOOLEAN
+	family BOOLEAN,
+	manually_added BOOLEAN DEFAULT FALSE
 );
 
 /*
@@ -90,6 +87,10 @@ CREATE TABLE IF NOT EXISTS communication(
 	native_id VARCHAR(100),  -- how its internally referenced
 	time_sent TIMESTAMP,     -- when sent
 	time_ended TIMESTAMP,    -- if call, when ended
+
+	shared BOOLEAN DEFAULT NULL,
+
+
 	content VARCHAR(1000000),  --actual content
 	location VARCHAR(10000),   -- link to media or website mentioned
 
@@ -107,37 +108,18 @@ CREATE TABLE IF NOT EXISTS communication(
 );
 
 
-
--- CREATE TABLE IF NOT EXISTS super_room_daily_aggregate(
--- 	day DATE,
-
--- )
+-- Readds Key Rows and Types
+INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),
+											  (-1, 'REMOVED (-1)');
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),  --case when comm unknown (for reply)
-											  (-1, 'REMOVED (-1)');  --case when comm removed (for reply)
-
-INSERT INTO communication_type(id, name) VALUES (-1, 'UNAVAILABLE_MEDIA'), --case when item is removed
-												(0, 'MESSAGE'),            -- text/emoji based message
-												(1, 'CALL'),               -- call communication
-												(2, 'MEDIA'),              -- photos or videos
-												(3, 'STICKER_GIF'),        -- stickers or gifs
-												(4, 'NATIVE_MEDIA'),       -- local (IE: IG reels)
-												(5, 'REACTION'),           -- emoji reaction to communication
-												(6, 'ALTER'),              -- channel based change
-												(7, 'LINK'),               -- a link to a website
+INSERT INTO communication_type(id, name) VALUES (-1, 'UNAVAILABLE_MEDIA'),
+												(0, 'MESSAGE'),
+												(1, 'CALL'),
+												(2, 'MEDIA'),
+												(3, 'STICKER_GIF'),
+												(4, 'NATIVE_MEDIA'),
+												(5, 'REACTION'),
+												(6, 'ALTER'), 
+												(7, 'LINK'),
 												(8, 'DELETED_NATIVE');
-												   

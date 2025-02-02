@@ -1,3 +1,6 @@
+#Setup Database
+python -m database.query_upload  --path "database\\db_teardown.sql"
+python -m database.query_upload  --path "database\\db_creation.sql"
 
 
 #Uploading (Participant Split (iMessage, Instagram, Discord) Files)
@@ -10,9 +13,20 @@ python multi_to_single_preprocessing\\join_files_call.py --input "data\\Call" --
 python multi_to_single_preprocessing\\split_file_call.py --input "data\\joined_calls.csv" --output "data\\participant_split_calls"
 python -m setup.upload --path "data\\participant_split_calls"
 
+#Uploading Contacts (Optional)
+python -m database.build_super --contacts "credentials\personal_contact.json"
 
-#Uploading Contacts (Super Participants)
-python -m database.query_upload --path upload_contact --contact "credentials/personal_contact.json"
+
+#Removing 
+python -m database.query_upload --path "database\\queries\\filter_noise.sql"
+python -m database.query_upload --path "database\\\queries\\interpolate_unknown.sql"
+
+
+
+
+
+
+
 
 
 #Remove Span (IE: randoms calling)
@@ -24,8 +38,15 @@ python -m database.query_upload --path database/query_set_participant_list.sql
 python -m database.query_upload --path database/query_set_super_participant_list.sql
 python -m database.query_upload --path database/query_set_super_rooms.sql
 
+#Interpolate
+python -m database.query_upload --path database/query_interpolate_missing.sql
+
 
 #Set Communication Weights
 python -m database.query_upload --path "database/query_set_communication_weight.sql"
+
+
+
+python -m database.query_upload --path "database/query_set_communication_deltas.sql"
 
 

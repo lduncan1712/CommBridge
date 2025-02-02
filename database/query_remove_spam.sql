@@ -1,5 +1,8 @@
+
+
+
 DELETE FROM participant
-            WHERE id IN (
+    WHERE id IN (
                 SELECT participant_id
             FROM (
                 SELECT 
