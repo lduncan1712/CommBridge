@@ -22,31 +22,11 @@ python -m database.query_upload --path "database\\queries\\filter_noise.sql"
 python -m database.query_upload --path "database\\\queries\\interpolate_unknown.sql"
 
 
+python -m database.query_upload --path "database\\queries\\tabulate_deltas.sql"
 
 
 
 
 
-
-
-#Remove Span (IE: randoms calling)
-python -m database.query_upload --path "database/query_remove_spam.sql"
-
-
-#Generate Super Rooms:
-python -m database.query_upload --path database/query_set_participant_list.sql
-python -m database.query_upload --path database/query_set_super_participant_list.sql
-python -m database.query_upload --path database/query_set_super_rooms.sql
-
-#Interpolate
-python -m database.query_upload --path database/query_interpolate_missing.sql
-
-
-#Set Communication Weights
-python -m database.query_upload --path "database/query_set_communication_weight.sql"
-
-
-
-python -m database.query_upload --path "database/query_set_communication_deltas.sql"
 
 

@@ -2,20 +2,19 @@
 
 
 --Assume Shared Status In Call Communication Types If Not Known
--- UPDATE communication
--- SET shared = TRUE
--- WHERE communication_type = 1
---   AND shared IS NULL
---   AND EXTRACT(EPOCH FROM (time_ended - time_sent)) > 10; -- over time
 
 
---Assume Communication without date, was sent at time of next message by that individual
+UPDATE communication
+SET shared = EXTRACT(EPOCH FROM (time_ended - time_sent)) > 10
+WHERE communication_type = 1;
+
+--Set TimeFrame As 0 Length (practical length of communication)
+UPDATE communication
+SET time_ended = time_sent
+WHERE communication_type = 1 and shared = FALSE;
 
 
-
-
-
-
+-- Set Unknown Time
 UPDATE communication c1
 SET time_sent = (
     SELECT c2.time_sent
