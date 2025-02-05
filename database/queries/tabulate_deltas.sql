@@ -1,10 +1,10 @@
 
-
+-- Mark all fixed communication end time is start time
 UPDATE communication
 SET time_ended = time_sent
 WHERE communication_type != 1;
 
-
+--Define analysis columns and temp columns
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_continuation INT;
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_DELTA_FUTURE INT;
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_response INT;
@@ -16,23 +16,21 @@ ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_SUPER_ROOM INT;
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_SUPER_PARTICIPANT INT;
 
 
--- Mark If Communication Within
 
-
-
-
--- -- Join Super Room
+-- -- Reference SuperRooms within communication
 UPDATE communication c
 SET TEMP_SUPER_ROOM = r.super_room
 FROM room r
 WHERE c.room = r.id;
 
+-- Reference Super participant within communication
 UPDATE communication c
 SET TEMP_SUPER_PARTICIPANT = r.super_participant
 FROM participant r
 WHERE c.participant = r.id;
 
 
+-- Determine communication within other (IE: during a call)
 UPDATE communication c1
 SET TEMP_WITHIN = TRUE
 FROM communication c2
@@ -44,7 +42,7 @@ WHERE c1.room = c2.room
   
   
   
-  
+ -- Find the time differnece between a messages sending and the previous message
  WITH previous_times AS (
     SELECT 
         id,
@@ -54,6 +52,8 @@ WHERE c1.room = c2.room
         LAG(time_ended) OVER (PARTITION BY TEMP_SUPER_ROOM ORDER BY time_sent, id) AS previous_time_ended
     FROM communication
 )
+
+-- Update communication
 UPDATE communication c1
 SET delta_continuation = EXTRACT(EPOCH FROM c1.time_sent - pt.previous_time_ended)
 FROM previous_times pt
@@ -64,7 +64,7 @@ WHERE c1.id = pt.id
   
   
   
-  
+-- Find the time difference between this ending and next sending
 WITH future_times AS (
     SELECT 
         id,
@@ -74,6 +74,7 @@ WITH future_times AS (
         LEAD(time_sent) OVER (PARTITION BY TEMP_SUPER_ROOM ORDER BY time_sent, id) AS next_time_sent
     FROM communication
 )
+-- update accordingly
 UPDATE communication c1
 SET TEMP_DELTA_FUTURE = EXTRACT(EPOCH FROM ft.next_time_sent - c1.time_ended)
 FROM future_times ft
@@ -81,7 +82,7 @@ WHERE c1.id = ft.id
   AND c1.room = ft.room;
   
 
-
+-- Create a list of the time since previous communication made by given participant
 WITH previous_times AS (
     SELECT
         id,
@@ -92,6 +93,7 @@ WITH previous_times AS (
         LAG(TEMP_DELTA_FUTURE) OVER (PARTITION BY TEMP_SUPER_PARTICIPANT, TEMP_SUPER_ROOM ORDER BY time_sent, id) AS previous_delta_temp
     FROM communication
 )
+-- update rows, so it reflects communication after (IE first message possibly responded to)
 UPDATE communication c
 SET delta_response = 
     CASE 

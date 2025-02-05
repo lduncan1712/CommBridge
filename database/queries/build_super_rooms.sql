@@ -38,7 +38,7 @@ FROM (
 WHERE r.id = subquery.room;
 
 
-
+-- Determine Valid Rooms
 WITH valid_rooms AS (
     SELECT TEMP_SUPER_PARTICIPANT_LIST, 
            COUNT(*) AS room_count,
@@ -49,6 +49,7 @@ WITH valid_rooms AS (
 ),
 
 
+--Rooms To Create
 inserted_super_rooms AS (
     INSERT INTO super_room (name, TEMP_SUPER_PARTICIPANT_LIST)
     SELECT 
@@ -70,6 +71,7 @@ inserted_super_rooms AS (
     RETURNING id, TEMP_SUPER_PARTICIPANT_LIST
 )
 
+-- Update References
 UPDATE room r
 SET super_room = isr.id
 FROM inserted_super_rooms isr
