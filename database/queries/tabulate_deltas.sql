@@ -104,15 +104,3 @@ FROM previous_times p
 WHERE c.id = p.id;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
