@@ -1,17 +1,18 @@
 /*
-    RATIONALE: Assuming Super_Participants have been established, now needs
-                to generate super_rooms, representing unique sets of super_participants
+    RATIONALE: After generating all super_participants, we now have the possibility
+               of super rooms, that is multiple rooms shared by the same super_participants
+               most often between platforms
 */
 
 
--- Create A Temporary Column
 ALTER TABLE room ADD COLUMN IF NOT EXISTS TEMP_PARTICIPANT_LIST int[];
 ALTER TABLE room ADD COLUMN IF NOT EXISTS TEMP_SUPER_PARTICIPANT_LIST int[];
 ALTER TABLE super_room ADD COLUMN IF NOT EXISTS TEMP_SUPER_PARTICIPANT_LIST int[];
 
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_SUPER_ROOM INT;
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_SUPER_PARTICIPANT INT;
 
-
--- Fill The Temporary Column With A List Of Participants In Each Room
+-- Aggregate List Of Rooms Participants
 UPDATE room r
 SET TEMP_PARTICIPANT_LIST = subquery.participant_array
 FROM (
@@ -22,7 +23,7 @@ FROM (
 ) AS subquery
 WHERE r.id = subquery.room;
 
--- Fill The Temporary Column With A List Of SuperParticipants (If Any) Linked To Participants
+-- Add List Of Super Participants
 UPDATE room r
 SET participant_list = subquery.participant_array,
     TEMP_SUPER_PARTICIPANT_LIST = subquery.super_participant_array
@@ -38,7 +39,7 @@ FROM (
 WHERE r.id = subquery.room;
 
 
--- Determine Valid Rooms
+-- Determine Which Room Sets To Amalgamate Into Super Rooms
 WITH valid_rooms AS (
     SELECT TEMP_SUPER_PARTICIPANT_LIST, 
            COUNT(*) AS room_count,
@@ -49,18 +50,19 @@ WITH valid_rooms AS (
 ),
 
 
---Rooms To Create
+-- Generate The Super Rooms
 inserted_super_rooms AS (
     INSERT INTO super_room (name, TEMP_SUPER_PARTICIPANT_LIST)
     SELECT 
         CASE 
-            -- If the combination occurs in only one platform, append platform name
+            -- Name Super_Room From Single Platform
             WHEN array_length(vr.platforms, 1) = 1 THEN 
                 (SELECT string_agg(sp.name, ' ' ORDER BY sp.id) 
                  FROM super_participant sp 
                  WHERE sp.id = ANY(vr.TEMP_SUPER_PARTICIPANT_LIST)) || ' (' || 
                 (SELECT name FROM platform WHERE id = vr.platforms[1]) || ')'
-            -- Otherwise, just use the names of the super participants
+
+            -- Shared Platform, Use Super_Participant Names
             ELSE 
                 (SELECT string_agg(sp.name, ' ' ORDER BY sp.id) 
                  FROM super_participant sp 
@@ -80,37 +82,14 @@ WHERE r.TEMP_SUPER_PARTICIPANT_LIST = isr.TEMP_SUPER_PARTICIPANT_LIST;
 
 
 
+-- -- Reference SuperRooms within communication
+UPDATE communication c
+SET TEMP_SUPER_ROOM = r.super_room
+FROM room r
+WHERE c.room = r.id;
 
-
-
-
-
-
--- -- Determine A List Of Repeated SuperParticipant Combinations
--- WITH valid_rooms AS (
---     SELECT TEMP_SUPER_PARTICIPANT_LIST, 
---            COUNT(*) AS room_count
---     FROM room
---     WHERE array_length(TEMP_SUPER_PARTICIPANT_LIST, 1) > 1      
---     GROUP BY TEMP_SUPER_PARTICIPANT_LIST
---     HAVING COUNT(*) >= 2 
--- ),
-
--- -- Generate These Needed Super_rooms
--- inserted_super_rooms AS (
---     INSERT INTO super_room (name, TEMP_SUPER_PARTICIPANT_LIST)
---     SELECT 
---         (SELECT string_agg(name, ' ' ORDER BY id) 
---          FROM super_participant 
---          WHERE id = ANY(vr.TEMP_SUPER_PARTICIPANT_LIST)), 
---         vr.TEMP_SUPER_PARTICIPANT_LIST
---     FROM valid_rooms vr
---     RETURNING id, TEMP_SUPER_PARTICIPANT_LIST
--- )
-
-
--- --Updating Rooms To Connect 
--- UPDATE room
--- SET super_room = isr.id
--- FROM inserted_super_rooms isr
--- WHERE room.TEMP_SUPER_PARTICIPANT_LIST = isr.TEMP_SUPER_PARTICIPANT_LIST;
+-- Reference Super participant within communication
+UPDATE communication c
+SET TEMP_SUPER_PARTICIPANT = r.super_participant
+FROM participant r
+WHERE c.participant = r.id;

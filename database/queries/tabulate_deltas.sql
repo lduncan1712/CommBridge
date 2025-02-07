@@ -1,57 +1,33 @@
+/*
+  RATIONALE: for high level, and conversational level analysis we need to generate
+             certain attributes
+*/
 
--- Mark all fixed communication end time is start time
-UPDATE communication
-SET time_ended = time_sent
-WHERE communication_type != 1;
 
---Define analysis columns and temp columns
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_continuation INT;
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_DELTA_FUTURE INT;
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_response INT;
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_weight INT;
-
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_WITHIN BOOLEAN DEFAULT FALSE;
 
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_SUPER_ROOM INT;
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_SUPER_PARTICIPANT INT;
-
-
-
--- -- Reference SuperRooms within communication
-UPDATE communication c
-SET TEMP_SUPER_ROOM = r.super_room
-FROM room r
-WHERE c.room = r.id;
-
--- Reference Super participant within communication
-UPDATE communication c
-SET TEMP_SUPER_PARTICIPANT = r.super_participant
-FROM participant r
-WHERE c.participant = r.id;
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_ADDED BOOLEAN DEFAULT FALSE;
 
 
 -- Determine communication within other (IE: during a call)
 UPDATE communication c1
-SET TEMP_WITHIN = TRUE
+SET TEMP_WITHIN = TRUE,
+    delta_continuation = 0
 FROM communication c2
-WHERE c2.communication_type = 1 and   --call
-      c1.TEMP_SUPER_ROOM = c2.TEMP_SUPER_ROOM and --same room
+WHERE c2.communication_type = 1 and   
+      c1.TEMP_SUPER_ROOM = c2.TEMP_SUPER_ROOM and 
       c1.time_sent >= c2.time_sent and 
       c1.time_ended <= c2.time_ended and 
       c1.id != c2.id and 
       c2.time_ended != c2.time_sent;
 
 
-
-
-
-
-
-
-
-
+-- For Every Shared Call, Break Split Into Communication For Each 
 INSERT INTO communication (
-    
     time_sent,
     time_ended,
     communication_type,
@@ -59,7 +35,9 @@ INSERT INTO communication (
     TEMP_SUPER_PARTICIPANT,
     TEMP_SUPER_ROOM,
     room,
-    weight
+    weight,
+    delta_continuation,
+    TEMP_ADDED
 )
 SELECT
     c.time_sent,
@@ -69,7 +47,9 @@ SELECT
     sp_id AS participant,
     c.TEMP_SUPER_ROOM,
     c.room,
-    -1
+    c.weight,
+    0,
+    TRUE
 FROM
     communication c
 JOIN
@@ -78,7 +58,8 @@ CROSS JOIN
     unnest(sr.temp_super_participant_list) AS sp_id
 WHERE
     c.communication_type = 1
-    AND c.shared = TRUE;
+    AND c.shared = TRUE
+    AND sp_id != c.TEMP_SUPER_PARTICIPANT;
 
 
 
@@ -112,7 +93,8 @@ UPDATE communication c1
 SET delta_continuation = EXTRACT(EPOCH FROM c1.time_sent - pt.previous_time_ended)
 FROM previous_times pt
 WHERE c1.id = pt.id
-  AND c1.room = pt.room;
+  AND c1.room = pt.room
+  AND TEMP_ADDED = FALSE;
   
   
   
@@ -156,5 +138,56 @@ SET delta_response =
     END
 FROM previous_times p
 WHERE c.id = p.id;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+WITH updated_communication AS (
+    SELECT 
+        id,
+        communication_type,
+        content,
+        time_sent,
+        time_ended,
+        -- Calculate weights for different conditions
+        CASE
+            WHEN communication_type = 0 THEN LENGTH(content)  -- COMM_MESSAGE
+            WHEN communication_type = 1 THEN GREATEST(2 * EXTRACT(EPOCH FROM (time_ended - time_sent)), 100)  -- COMM_CALL
+            WHEN communication_type = 3 THEN 10  -- COMM_STICKER_GIF
+            WHEN communication_type = 5 THEN 10  -- COMM_REACTION
+            WHEN communication_type = 2 THEN 100  -- COMM_MEDIA
+            WHEN communication_type = 4 THEN 100  -- COMM_NATIVE_MEDIA
+            WHEN communication_type = 8 THEN 100  -- COMM_DELETED_NATIVE
+            WHEN communication_type = 7 THEN 100  -- COMM_LINK
+            WHEN communication_type = 6 THEN 100  -- COMM_ALTER
+            WHEN communication_type = -1 THEN (SELECT AVG(weight) FROM communication WHERE communication_type = 0)  -- COMM_REMOVED
+            ELSE NULL
+        END AS calculated_weight
+    FROM communication
+)
+UPDATE communication
+SET 
+    weight = updated_communication.calculated_weight
+FROM updated_communication
+WHERE communication.id = updated_communication.id;
 
 

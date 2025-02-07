@@ -1,9 +1,9 @@
 /*
     RATIONALE: Assuming Some communication occurs from one directional spam (IE: spam calls),
-                providing no communicative value, we remove
+                providing no communicative value, we remove as well as rooms
 */
 
--- Determine participant counts within participants
+-- Determine participant participation
 WITH super_participant_communications AS (
     SELECT 
         sp.id AS super_participant_id,
@@ -18,7 +18,7 @@ WITH super_participant_communications AS (
     GROUP BY sp.id, sp.name, sr.id
 ),
 
--- Determin participant within rooms
+-- Determine participant within rooms
 super_room_communications AS (
     SELECT 
         sr.id AS super_room_id,
@@ -29,7 +29,7 @@ super_room_communications AS (
     GROUP BY sr.id
 ),
 
---Make list of rooms where one participant contributes fully
+--Generate Fully One Sided Rooms
 fully_contributing_super_rooms AS (
     SELECT 
         spc.super_room_id
