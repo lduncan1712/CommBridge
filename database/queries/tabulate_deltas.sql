@@ -34,11 +34,65 @@ WHERE c.participant = r.id;
 UPDATE communication c1
 SET TEMP_WITHIN = TRUE
 FROM communication c2
-WHERE c1.room = c2.room
-  AND c1.time_sent >= c2.time_sent
-  AND c1.time_ended <= c2.time_ended
-  AND c1.id != c2.id
-  AND c1.time_ended != c1.time_sent;
+WHERE c2.communication_type = 1 and   --call
+      c1.TEMP_SUPER_ROOM = c2.TEMP_SUPER_ROOM and --same room
+      c1.time_sent >= c2.time_sent and 
+      c1.time_ended <= c2.time_ended and 
+      c1.id != c2.id and 
+      c2.time_ended != c2.time_sent;
+
+
+
+
+
+
+
+
+
+
+INSERT INTO communication (
+    
+    time_sent,
+    time_ended,
+    communication_type,
+    platform,
+    TEMP_SUPER_PARTICIPANT,
+    TEMP_SUPER_ROOM,
+    room,
+    weight
+)
+SELECT
+    c.time_sent,
+    c.time_ended,
+    c.communication_type,
+    c.platform,
+    sp_id AS participant,
+    c.TEMP_SUPER_ROOM,
+    c.room,
+    -1
+FROM
+    communication c
+JOIN
+    super_room sr ON c.temp_super_room = sr.id
+CROSS JOIN
+    unnest(sr.temp_super_participant_list) AS sp_id
+WHERE
+    c.communication_type = 1
+    AND c.shared = TRUE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   
   
