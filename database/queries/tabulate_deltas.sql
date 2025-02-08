@@ -97,9 +97,6 @@ WHERE c1.id = pt.id
   AND TEMP_ADDED = FALSE;
   
   
-  
-  
-  
 -- Find the time difference between this ending and next sending
 WITH future_times AS (
     SELECT 
