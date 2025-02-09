@@ -25,7 +25,7 @@ python -m database.query_upload --path "database\\\queries\\interpolate_unknown.
 python -m database.query_upload --path "database\\queries\\tabulate_deltas.sql"
 
 
-
+#SELECT communication_type, TEMP_SUPER_ROOM, TEMP_SUPER_PARTICIPANT, time_sent, time_ended, m1_previous, m2_continue, m3_response from communication order by temp_super_room, time_sent
 
 
 

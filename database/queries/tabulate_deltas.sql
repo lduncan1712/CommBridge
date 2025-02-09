@@ -4,187 +4,109 @@
 */
 
 
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_continuation INT;
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_DELTA_FUTURE INT;
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_response INT;
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS delta_weight INT;
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS m1_previous INT;
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS m2_continue INT;
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS m3_response INT;
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS m4_weight INT;
+
+
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_WITHIN BOOLEAN DEFAULT FALSE;
 
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_ADDED BOOLEAN DEFAULT FALSE;
 
-
--- Determine communication within other (IE: during a call)
-UPDATE communication c1
-SET TEMP_WITHIN = TRUE,
-    delta_continuation = 0
-FROM communication c2
-WHERE c2.communication_type = 1 and   
-      c1.TEMP_SUPER_ROOM = c2.TEMP_SUPER_ROOM and 
-      c1.time_sent >= c2.time_sent and 
-      c1.time_ended <= c2.time_ended and 
-      c1.id != c2.id and 
-      c2.time_ended != c2.time_sent;
-
-
--- For Every Shared Call, Break Split Into Communication For Each 
-INSERT INTO communication (
-    time_sent,
-    time_ended,
-    communication_type,
-    platform,
-    TEMP_SUPER_PARTICIPANT,
-    TEMP_SUPER_ROOM,
-    room,
-    weight,
-    delta_continuation,
-    TEMP_ADDED
-)
-SELECT
-    c.time_sent,
-    c.time_ended,
-    c.communication_type,
-    c.platform,
-    sp_id AS participant,
-    c.TEMP_SUPER_ROOM,
-    c.room,
-    c.weight,
-    0,
-    TRUE
-FROM
-    communication c
-JOIN
-    super_room sr ON c.temp_super_room = sr.id
-CROSS JOIN
-    unnest(sr.temp_super_participant_list) AS sp_id
-WHERE
-    c.communication_type = 1
-    AND c.shared = TRUE
-    AND sp_id != c.TEMP_SUPER_PARTICIPANT;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  
- -- Find the time differnece between a messages sending and the previous message
- WITH previous_times AS (
+-- Mark Communications Inside Others (SUPER_ROOM)
+WITH super_room_mark AS (
     SELECT 
-        id,
-        room,
+        c1.id,
+        c2.id AS c2_id
+    FROM 
+        communication c1
+    JOIN 
+        communication c2
+    ON 
+        c1.TEMP_SUPER_ROOM = c2.TEMP_SUPER_ROOM
+    WHERE 
+        c2.communication_type = 1
+        AND c1.time_sent >= c2.time_sent
+        AND c1.time_ended <= c2.time_ended
+        AND c1.id != c2.id
+        AND c2.time_ended != c2.time_sent
+)
+UPDATE communication c1
+SET 
+    TEMP_WITHIN = TRUE,
+    m1_previous = 0,
+    m2_continue = 0,
+    m3_response = 0
+FROM super_room_mark srm
+WHERE c1.id = srm.id;
+
+
+-- Mark m1_previous (SUPER_ROOM)
+WITH previous_times AS (
+    SELECT 
+        id, 
         time_sent,
-        time_ended,
         LAG(time_ended) OVER (PARTITION BY TEMP_SUPER_ROOM ORDER BY time_sent, id) AS previous_time_ended
     FROM communication
 )
-
--- Update communication
 UPDATE communication c1
-SET delta_continuation = EXTRACT(EPOCH FROM c1.time_sent - pt.previous_time_ended)
+SET m1_previous = EXTRACT(EPOCH FROM c1.time_sent - pt.previous_time_ended)
 FROM previous_times pt
 WHERE c1.id = pt.id
-  AND c1.room = pt.room
-  AND TEMP_ADDED = FALSE;
-  
-  
--- Find the time difference between this ending and next sending
+  AND (c1.communication_type != 1 OR c1.reply IS NULL); -- Not Split Calls
+
+
+-- Mark m2_continue (SUPER_ROOM)
 WITH future_times AS (
     SELECT 
-        id,
-        room,
-        time_sent,
+        id, 
         time_ended,
         LEAD(time_sent) OVER (PARTITION BY TEMP_SUPER_ROOM ORDER BY time_sent, id) AS next_time_sent
     FROM communication
 )
--- update accordingly
 UPDATE communication c1
-SET TEMP_DELTA_FUTURE = EXTRACT(EPOCH FROM ft.next_time_sent - c1.time_ended)
+SET m2_continue = EXTRACT(EPOCH FROM ft.next_time_sent - c1.time_ended)
 FROM future_times ft
 WHERE c1.id = ft.id
-  AND c1.room = ft.room;
-  
+  AND (c1.communication_type != 1 OR c1.reply IS NULL); -- Not Split Calls
 
--- Create a list of the time since previous communication made by given participant
+-- Mark m3_response (SUPER_ROOM, SUPER_PARTICIPANT)
 WITH previous_times AS (
-    SELECT
+    SELECT 
         id,
-        TEMP_SUPER_PARTICIPANT AS participant,
-        TEMP_SUPER_ROOM AS room,
         time_sent,
-        LAG(time_sent) OVER (PARTITION BY TEMP_SUPER_PARTICIPANT, TEMP_SUPER_ROOM ORDER BY time_sent, id) AS previous_time,
-        LAG(TEMP_DELTA_FUTURE) OVER (PARTITION BY TEMP_SUPER_PARTICIPANT, TEMP_SUPER_ROOM ORDER BY time_sent, id) AS previous_delta_temp
+        LAG(time_sent) OVER (PARTITION BY TEMP_SUPER_PARTICIPANT, TEMP_SUPER_ROOM ORDER BY time_sent, id) AS pt,
+        LAG(m2_continue) OVER (PARTITION BY TEMP_SUPER_PARTICIPANT, TEMP_SUPER_ROOM ORDER BY time_sent, id) AS m2
     FROM communication
 )
--- update rows, so it reflects communication after (IE first message possibly responded to)
 UPDATE communication c
-SET delta_response = 
-    CASE 
-        WHEN EXTRACT(EPOCH FROM (c.time_sent - p.previous_time)) - COALESCE(p.previous_delta_temp, 0) < 0 THEN 0
-        ELSE EXTRACT(EPOCH FROM (c.time_sent - p.previous_time)) - COALESCE(p.previous_delta_temp, 0)
-    END
+SET m3_response = GREATEST(EXTRACT(EPOCH FROM (c.time_sent - p.pt)) - COALESCE(p.m2, 0), 0)
 FROM previous_times p
 WHERE c.id = p.id;
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-WITH updated_communication AS (
-    SELECT 
-        id,
-        communication_type,
-        content,
-        time_sent,
-        time_ended,
-        -- Calculate weights for different conditions
-        CASE
-            WHEN communication_type = 0 THEN LENGTH(content)  -- COMM_MESSAGE
-            WHEN communication_type = 1 THEN GREATEST(2 * EXTRACT(EPOCH FROM (time_ended - time_sent)), 100)  -- COMM_CALL
-            WHEN communication_type = 3 THEN 10  -- COMM_STICKER_GIF
-            WHEN communication_type = 5 THEN 10  -- COMM_REACTION
-            WHEN communication_type = 2 THEN 100  -- COMM_MEDIA
-            WHEN communication_type = 4 THEN 100  -- COMM_NATIVE_MEDIA
-            WHEN communication_type = 8 THEN 100  -- COMM_DELETED_NATIVE
-            WHEN communication_type = 7 THEN 100  -- COMM_LINK
-            WHEN communication_type = 6 THEN 100  -- COMM_ALTER
-            WHEN communication_type = -1 THEN (SELECT AVG(weight) FROM communication WHERE communication_type = 0)  -- COMM_REMOVED
-            ELSE NULL
-        END AS calculated_weight
-    FROM communication
-)
-UPDATE communication
-SET 
-    weight = updated_communication.calculated_weight
-FROM updated_communication
-WHERE communication.id = updated_communication.id;
-
+-- Mark m4_weight
+UPDATE communication c
+SET weight = 
+    CASE 
+        WHEN c.communication_type = 0 THEN LENGTH(c.content)  -- COMM_MESSAGE
+        WHEN c.communication_type = 1 THEN GREATEST(2 * EXTRACT(EPOCH FROM (c.time_ended - c.time_sent)), 100)  -- COMM_CALL
+        WHEN c.communication_type = 3 THEN 10  -- COMM_STICKER_GIF
+        WHEN c.communication_type = 5 THEN 10  -- COMM_REACTION
+        WHEN c.communication_type = 2 THEN 100  -- COMM_MEDIA
+        WHEN c.communication_type = 4 THEN 100  -- COMM_NATIVE_MEDIA
+        WHEN c.communication_type = 8 THEN 100  -- COMM_DELETED_NATIVE
+        WHEN c.communication_type = 7 THEN 100  -- COMM_LINK
+        WHEN c.communication_type = 6 THEN 100  -- COMM_ALTER
+        WHEN c.communication_type = -1 THEN (   -- COMM_REMOVED
+            SELECT COALESCE(AVG(weight), 0) 
+            FROM communication 
+            WHERE communication_type = 0
+        )  
+        ELSE NULL
+    END
+FROM communication c2
+WHERE c.id = c2.id;
 

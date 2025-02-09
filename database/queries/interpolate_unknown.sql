@@ -16,6 +16,43 @@ UPDATE communication
 SET time_ended = time_sent + INTERVAL '5 hours'
 WHERE time_ended - time_sent > INTERVAL '5 hours';
 
+
+
+-- Break Shared Communication (IE: Call) Into Portions (SUPER_ROOM, SUPER_PARTICIPANT)
+INSERT INTO communication (
+    time_sent,
+    time_ended,
+    communication_type,
+    platform,
+    TEMP_SUPER_PARTICIPANT,
+    TEMP_SUPER_ROOM,
+    room,
+    reply
+)
+SELECT
+    c.time_sent + INTERVAL '1 seconds',
+    c.time_ended,
+    c.communication_type,
+    c.platform,
+    sp_id AS participant,
+    c.TEMP_SUPER_ROOM,
+    c.room,
+    c.id
+FROM
+    communication c
+JOIN
+    super_room sr ON c.temp_super_room = sr.id
+CROSS JOIN
+    unnest(sr.temp_super_participant_list) AS sp_id
+WHERE
+    c.communication_type = 1
+    AND c.shared = TRUE
+    AND sp_id != c.TEMP_SUPER_PARTICIPANT;
+
+
+
+
+
 -- Set Endtime To Startime for other
 UPDATE communication
 SET time_ended = time_sent
