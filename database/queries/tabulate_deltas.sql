@@ -1,19 +1,49 @@
 /*
-  RATIONALE: for high level, and conversational level analysis we need to generate
-             certain attributes
+  RATIONALE: for high level, and conversational level analysis we need to alter
+             data slightly
 */
 
 
+-- Add Analysis Columns
+
+-- Measures Time Between Messages, Measures time between messages sent by other users
+-- Measures the weight of communication
+
+
+-- Measures The Time Between This Communications Sending And Previous Communication
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS m1_previous INT;
+
+--Measures The Time Between This Communications Ending To Next Communication
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS m2_continue INT;
+
+--Measures The Time Between This Communication, And Oldest Message Following Last 
+-- Response By Participant (IE: oldest unresponsed to communication)
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS m3_response INT;
+
+-- Measures The Communicative "weight" of a communication
 ALTER TABLE communication ADD COLUMN IF NOT EXISTS m4_weight INT;
 
 
-ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_WITHIN BOOLEAN DEFAULT FALSE;
+-- ---------------------------------
+
+-- GROUP:
+
+-- unique group number
+-- weight??
+
+-- ---------------------------------
+
+-- Daily (time based):
+
+-- entropy (participant split)
+
+-- density of conversation ()
+
+
 
 
 -- Mark Communications Inside Others (SUPER_ROOM)
+ALTER TABLE communication ADD COLUMN IF NOT EXISTS TEMP_WITHIN BOOLEAN DEFAULT FALSE;
 WITH super_room_mark AS (
     SELECT 
         c1.id,
@@ -38,10 +68,67 @@ SET
     m2_continue = 0,
     m3_response = 0
 FROM super_room_mark srm
-WHERE c1.id = srm.id;
+WHERE c1.id = srm.id
+and c1.communication_type != 1;
+
+-- Place In Temporary Table
+CREATE TEMP TABLE temp_removed_rows AS
+SELECT * FROM communication WHERE TEMP_WITHIN = TRUE;  
+
+-- Delete
+DELETE FROM communication WHERE TEMP_WITHIN = TRUE;  
 
 
--- Mark m1_previous (SUPER_ROOM)
+
+
+-- Break Shared Communication (IE: Call) Into One Communication Per Participant (SUPER_ROOM, SUPER_PARTICIPANT)
+WITH numbered_rows AS (
+    SELECT
+        c.time_sent,
+        c.time_ended,
+        c.communication_type,
+        c.platform,
+        sp_id AS participant,
+        c.TEMP_SUPER_ROOM,
+        c.room,
+        c.id,
+        ROW_NUMBER() OVER (PARTITION BY c.id ORDER BY sp_id) AS rn
+    FROM
+        communication c
+    JOIN
+        super_room sr ON c.temp_super_room = sr.id
+    CROSS JOIN
+        unnest(sr.temp_super_participant_list) AS sp_id
+    WHERE
+        c.communication_type = 1
+        AND c.shared = TRUE
+        AND sp_id != c.TEMP_SUPER_PARTICIPANT
+)
+INSERT INTO communication (
+    time_sent,
+    time_ended,
+    communication_type,
+    platform,
+    TEMP_SUPER_PARTICIPANT,
+    TEMP_SUPER_ROOM,
+    room,
+    reply
+)
+SELECT
+    nr.time_sent + INTERVAL '5 seconds' + INTERVAL '0.1 second' * nr.rn, 
+    nr.time_ended,
+    nr.communication_type,
+    nr.platform,
+    nr.participant,
+    nr.TEMP_SUPER_ROOM,
+    nr.room,
+    nr.id
+FROM
+    numbered_rows nr;
+
+
+
+-- Determine m1 (SUPER_ROOM)
 WITH previous_times AS (
     SELECT 
         id, 
@@ -51,9 +138,10 @@ WITH previous_times AS (
 )
 UPDATE communication c1
 SET m1_previous = EXTRACT(EPOCH FROM c1.time_sent - pt.previous_time_ended)
+                  
 FROM previous_times pt
-WHERE c1.id = pt.id
-  AND (c1.communication_type != 1 OR c1.reply IS NULL); -- Not Split Calls
+WHERE c1.id = pt.id;
+
 
 
 -- Mark m2_continue (SUPER_ROOM)
@@ -62,13 +150,14 @@ WITH future_times AS (
         id, 
         time_ended,
         LEAD(time_sent) OVER (PARTITION BY TEMP_SUPER_ROOM ORDER BY time_sent, id) AS next_time_sent
-    FROM communication
+     FROM communication
 )
 UPDATE communication c1
-SET m2_continue = EXTRACT(EPOCH FROM ft.next_time_sent - c1.time_ended)
+SET m2_continue =  EXTRACT(EPOCH FROM ft.next_time_sent - c1.time_ended)
+
 FROM future_times ft
-WHERE c1.id = ft.id
-  AND (c1.communication_type != 1 OR c1.reply IS NULL); -- Not Split Calls
+WHERE c1.id = ft.id;
+
 
 -- Mark m3_response (SUPER_ROOM, SUPER_PARTICIPANT)
 WITH previous_times AS (
@@ -80,10 +169,36 @@ WITH previous_times AS (
     FROM communication
 )
 UPDATE communication c
-SET m3_response = GREATEST(EXTRACT(EPOCH FROM (c.time_sent - p.pt)) - COALESCE(p.m2, 0), 0)
+SET m3_response = EXTRACT(EPOCH FROM (c.time_sent - p.pt)) - COALESCE(p.m2, 0)
 FROM previous_times p
 WHERE c.id = p.id;
 
+
+-- HANDLES previous logic for calls (how to represent SEQUENTIAL vs CONCURRENT)
+WITH max_m2_continue AS (
+    SELECT 
+        time_ended, 
+        MAX(m2_continue) AS max_m2
+    FROM communication
+    GROUP BY time_ended
+)
+UPDATE communication c
+SET m2_continue = COALESCE(mc.max_m2, 0)  
+FROM max_m2_continue mc
+WHERE c.time_ended = mc.time_ended
+AND c.m2_continue < 0;
+
+UPDATE communication c
+SET m1_previous = 5   -- Alternatively 0
+WHERE c.m1_previous < 0;
+
+
+
+-- Readd Within
+INSERT INTO communication
+SELECT * FROM temp_removed_rows;
+
+DROP TABLE IF EXISTS temp_removed_rows;
 
 
 
