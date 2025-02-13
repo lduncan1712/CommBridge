@@ -66,7 +66,8 @@ SET
     TEMP_WITHIN = TRUE,
     m1_previous = 0,
     m2_continue = 0,
-    m3_response = 0
+    m3_response = 0,
+    reply = srm.c2_id
 FROM super_room_mark srm
 WHERE c1.id = srm.id
 and c1.communication_type != 1;

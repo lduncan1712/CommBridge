@@ -10,7 +10,6 @@ TRUNCATE room_participation,
          communication_type
          CASCADE;
 
-
 DROP TABLE IF EXISTS communication;
 DROP TABLE IF EXISTS room_participation;
 DROP TABLE IF EXISTS room;

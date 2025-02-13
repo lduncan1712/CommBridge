@@ -107,6 +107,14 @@ CREATE TABLE IF NOT EXISTS communication(
 
 );
 
+CREATE TABLE IF NOT EXISTS communication_aggregate(
+	day DATE,
+	am1 REAL
+);
+
+
+
+
 
 -- Readds Key Rows and Types
 INSERT INTO communication(id, content) VALUES (-2, 'UNKNOWN (-2)'),
