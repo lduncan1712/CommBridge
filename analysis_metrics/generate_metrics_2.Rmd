@@ -1,0 +1,39 @@
+```{r}
+install.packages("RPostgres")
+install.packages("jsonlite")
+library(RPostgres)
+library(jsonlite)
+```
+
+#READ IN CREDENTIALS
+```{r}
+creds <- fromJSON("C:\\Users\\ldunc\\OneDrive\\_WORKSPACE\\CommBridge\\credentials\\db_creds.json")
+```
+
+#CONNECT TO DATABASE
+```{r}
+con <- dbConnect(
+  RPostgres::Postgres(),
+  dbname = creds$dbname,
+  host = creds$host,
+  port = creds$port,
+  user = creds$user,
+  password = creds$password
+)
+```
+
+
+```{r}
+
+data <- dbReadTable(con, "communication")
+print(head(data))
+```
+
+
+#CLUSTERING COMM 
+```{r}
+install.packages("fpc")
+library(fpc)
+
+
+```

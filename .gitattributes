@@ -1,2 +1,2 @@
-*.sql linguist-vendored=false
-*.py linguist-vendored=false
+
+github/fsharp-custom-action/** -linguist-vendored
