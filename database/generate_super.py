@@ -15,6 +15,6 @@ if args.contacts:
     database.build_manual_superparticipants(contacts)
 
 #Set Rest Using Remaining Query
-database.apply_query("database\\queries\\build_remaining_super_participants.sql")
+database.apply_query("database\\cleaning\\build_remaining_super_participants.sql")
     
-database.apply_query("database\\queries\\build_super_rooms.sql")
+database.apply_query("database\\cleaning\\build_super_rooms.sql")

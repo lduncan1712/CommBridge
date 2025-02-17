@@ -1,6 +1,6 @@
 #Setup Database
 python -m database.query_upload  --path "database\\db_teardown.sql"
-python -m database.query_upload  --path "database\\db_creation.sql"
+python -m database.query_upload  --path "database\\db_design.sql"
 
 
 #Uploading (Participant Split (iMessage, Instagram, Discord) Files)
@@ -14,15 +14,19 @@ python multi_to_single_preprocessing\\split_file_call.py --input "data\\joined_c
 python -m setup.upload --path "data\\participant_split_calls"
 
 #Uploading Contacts (Optional)
-python -m database.build_super --contacts "credentials\personal_contact.json"
+python -m database.generate_super --contacts "credentials\personal_contact.json"
 
 
 #Removing 
-python -m database.query_upload --path "database\\queries\\filter_noise.sql"
-python -m database.query_upload --path "database\\\queries\\interpolate_unknown.sql"
+python -m database.query_upload --path "database\\cleaning\\filter_noise.sql"
+python -m database.query_upload --path "database\\cleaning\\interpolate_unknown.sql"
+
+python -m database.query_upload --path "database\\cleaning\\split_interparticipant_calls.sql"
 
 
-python -m database.query_upload --path "database\\queries\\tabulate_deltas.sql"
+
+
+python -m database.query_upload --path "analysis\\generate_metrics_1.sql"
 
 
 #SELECT communication_type, TEMP_SUPER_ROOM, TEMP_SUPER_PARTICIPANT, time_sent, time_ended, m1_previous, m2_continue, m3_response from communication order by temp_super_room, time_sent
