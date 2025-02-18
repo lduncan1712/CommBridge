@@ -98,7 +98,9 @@ CREATE TABLE IF NOT EXISTS communication(
 	reply INT REFERENCES communication(id) ON DELETE CASCADE,    -- any communication this is responding to
 	platform INT REFERENCES platform(id) ON DELETE CASCADE,      
 	participant INT REFERENCES participant(id) ON DELETE CASCADE,
-	room INT REFERENCES room(id) ON DELETE CASCADE
+	room INT REFERENCES room(id) ON DELETE CASCADE,
+
+	
 
 );
 

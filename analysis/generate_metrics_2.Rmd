@@ -1,8 +1,11 @@
 ```{r}
 install.packages("RPostgres")
 install.packages("jsonlite")
+
 library(RPostgres)
 library(jsonlite)
+library(dbscan)
+
 ```
 
 #READ IN CREDENTIALS
@@ -25,15 +28,99 @@ con <- dbConnect(
 
 ```{r}
 
-data <- dbReadTable(con, "communication")
+data <- dbGetQuery(con, "SELECT 
+                            id,content, TEMP_SUPER_PARTICIPANT,TEMP_SUPER_ROOM,m4_weight,m5_temp,TEMP_EPOCH_SENT,
+                            DATE(time_sent) 
+                         from 
+                            communication
+                         where 
+                          NOT TEMP_EPOCH_SENT is NULL
+                          and NOT TEMP_SUPER_ROOM is NULL
+                         order by
+                            TEMP_SUPER_ROOM, temp_epoch_sent
+                         ")
 print(head(data))
+
 ```
 
 
 #CLUSTERING COMM 
 ```{r}
-install.packages("fpc")
-library(fpc)
 
+rooms <- unique(data$temp_super_room)
+
+for (room in rooms){
+  
+  data_in_room <- data[data$temp_super_room == room,]
+  
+  grouped <- aggregate(temp_epoch_sent ~ date + m5_temp,
+                           data = data_in_room,
+                           FUN = mean)
+  
+  clustering <- hdbscan(as.matrix(grouped[,"temp_epoch_sent"]), minPts = 2)
+  
+  grouped$cluster <- clustering$cluster
+  
+  merged_data <- merge(data_in_room, grouped[, c("date", "m5_temp", "cluster")], 
+                       by = c("date", "m5_temp"), all.x = TRUE)
+  
+  
+  # Update the main data with the merged cluster values
+  data$m5_cluster[data$temp_super_room == room] <- merged_data$cluster
+
+  
+}
+
+```
+```{r}
+
+generate_clusters <- function(rows){
+  
+  #Grouping By Sequential Interaction
+  grouped <- aggregate(temp_epoch_sent ~ date + m5_temp,
+                       data = rows,
+                       FUN = mean)
+  
+  #Clustering using HDBSCAN
+  clustering <- hdbscan(as.matrix(grouped[,"temp_epoch_sent"]), minPts = 2)
+  
+  #Ungrouping Sequential
+  grouped$cluster <- clustering$cluster
+  merged_data <- merge(data_in_room, grouped[, c("date", "m5_temp", "cluster")], 
+                       by = c("date", "m5_temp"), all.x = TRUE)
+  
+  return(merged_data)
+}
+
+
+```
+
+```{r}
+
+rooms <- unique(data$temp_super_room)
+
+for (room in rooms){
+  
+  data_in_room <- data[data$temp_super_room == room,]
+  
+  clustered <- generate_clusters(data_in_room)
+  
+  
+  # Update the main data with the merged cluster values
+  data$m5_cluster[data$temp_super_room == room] <- clustered$cluster
+
+  
+}
+
+
+
+
+
+
+
+
+
+
+head(data,5)
 
 ```

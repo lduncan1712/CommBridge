@@ -151,7 +151,7 @@ DROP TABLE IF EXISTS temp_removed_rows;
 
 -- Mark m4_weight
 UPDATE communication c
-SET weight = 
+SET m4_weight = 
     CASE 
         WHEN c.communication_type = 0 THEN LENGTH(c.content)  -- COMM_MESSAGE
         WHEN c.communication_type = 1 THEN GREATEST(2 * EXTRACT(EPOCH FROM (c.time_ended - c.time_sent)), 100)  -- COMM_CALL
@@ -163,7 +163,7 @@ SET weight =
         WHEN c.communication_type = 7 THEN 100  -- COMM_LINK
         WHEN c.communication_type = 6 THEN 100  -- COMM_ALTER
         WHEN c.communication_type = -1 THEN (   -- COMM_REMOVED
-            SELECT COALESCE(AVG(weight), 0) 
+            SELECT GREATEST(50, COALESCE(AVG(m4_weight), 0))
             FROM communication 
             WHERE communication_type = 0
         )  
