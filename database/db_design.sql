@@ -3,32 +3,29 @@
 	Represents A Unique Location/Source For Data
 */
 CREATE TABLE IF NOT EXISTS platform(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(50)
+	id       SERIAL PRIMARY KEY,
+	name     VARCHAR(50)
 );
 
 /*
 	Stores A Person, Whose Ownership Links Multiple participants
 */
 CREATE TABLE IF NOT EXISTS super_participant(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(100),
-	gender VARCHAR(1),
-	family BOOLEAN,
-	manually_added BOOLEAN DEFAULT FALSE
+	id       SERIAL PRIMARY KEY,
+	name     VARCHAR(100),
+	gender   VARCHAR(1),
+	family   BOOLEAN,
+	contact  BOOLEAN DEFAULT FALSE
 );
 
 /*
 	Represents A Communication Space With The Same Individuals Over Multiple Platforms
 */
 CREATE TABLE IF NOT EXISTS super_room(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(1000),
-	super_participant_group INT[]
+	id       SERIAL PRIMARY KEY,
+	name     VARCHAR(1000),
+	sp_list INT[]
 );
-
-
-
 
 /*
 	Represents An Individual Account Involved Within Communication In A Platform
@@ -36,12 +33,12 @@ CREATE TABLE IF NOT EXISTS super_room(
 	IE: instagram_account_123
 */
 CREATE TABLE IF NOT EXISTS participant(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(100),
-	username VARCHAR(100),
-	native_id VARCHAR(100),
-	super_participant INT REFERENCES super_participant(id) ON DELETE CASCADE,
-	platform INT REFERENCES platform(id) ON DELETE CASCADE
+	id           SERIAL PRIMARY KEY,
+	name         VARCHAR(100),
+	username     VARCHAR(100),
+	nid          VARCHAR(100),
+	sparticipant INT REFERENCES super_participant(id) ON DELETE CASCADE,
+	platform     INT REFERENCES platform(id) ON DELETE CASCADE
 );
 
 /*
@@ -50,22 +47,21 @@ CREATE TABLE IF NOT EXISTS participant(
 	IE: 'Chat With Joe Smith', 'CP123 Group Chat'
 */
 CREATE TABLE IF NOT EXISTS room(
-	id SERIAL PRIMARY KEY,
-	name VARCHAR(1000),
-	platform INT REFERENCES platform(id) ON DELETE CASCADE,
-	super_room INT REFERENCES super_room(id) ON DELETE CASCADE,
-	room_creation_date TIMESTAMP,
-	participant_list INT[],
-	super_participant_list INT[]
+	id           SERIAL PRIMARY KEY,
+	name         VARCHAR(1000),
+	platform     INT REFERENCES platform(id) ON DELETE CASCADE,
+	sroom        INT REFERENCES super_room(id) ON DELETE CASCADE,
+	p_list       INT[],
+	sp_list      INT[]
 );
 
 /*
 	A Marker Of Participants Within A Room
 */
-CREATE TABLE room_participation(
-	room INT REFERENCES room(id) ON DELETE CASCADE,
-	participant INT REFERENCES participant(id) ON DELETE CASCADE,
-	date_of_entry TIMESTAMP,
+CREATE TABLE IF NOT EXISTS room_participation(
+	room         INT REFERENCES room(id) ON DELETE CASCADE,
+	participant  INT REFERENCES participant(id) ON DELETE CASCADE,
+
 	PRIMARY KEY (room, participant)
 );
 
@@ -75,38 +71,42 @@ CREATE TABLE room_participation(
 	IE: 'call', 'message', 'IG reel', 'photo'
 */
 CREATE TABLE IF NOT EXISTS communication_type(
-	id INT PRIMARY KEY,
-	name VARCHAR(100)
+	id       INT PRIMARY KEY,
+	name     VARCHAR(100)
 );
 
 /*
 	A Piece Of Individual Communication
 */
 CREATE TABLE IF NOT EXISTS communication(
-	id SERIAL PRIMARY KEY,
-	native_id VARCHAR(100),  -- how its internally referenced
-	time_sent TIMESTAMP,     -- when sent
-	time_ended TIMESTAMP,    -- if call, when ended
-
-	shared BOOLEAN DEFAULT NULL,
-
-
-	content VARCHAR(1000000),  --actual content
-	location VARCHAR(10000),   -- link to media or website mentioned
-
-	communication_type INT REFERENCES communication_type(id) ON DELETE CASCADE,  -- the type of media this is
-	reply INT REFERENCES communication(id) ON DELETE CASCADE,    -- any communication this is responding to
-	platform INT REFERENCES platform(id) ON DELETE CASCADE,      
-	participant INT REFERENCES participant(id) ON DELETE CASCADE,
-	room INT REFERENCES room(id) ON DELETE CASCADE,
-
-	
+	id           SERIAL PRIMARY KEY, 
+	nid          VARCHAR(100),  
+	start        TIMESTAMP,   
+	finish       TIMESTAMP,  
+	content      VARCHAR(1000000),  
+	link         VARCHAR(10000),   
+	type         INT REFERENCES communication_type(id) ON DELETE CASCADE,  
+	reply        INT REFERENCES communication(id) ON DELETE CASCADE,    
+	platform     INT REFERENCES platform(id) ON DELETE CASCADE,    
+	participant  INT REFERENCES participant(id) ON DELETE CASCADE,
+	sparticipant INT,
+	room         INT REFERENCES room(id) ON DELETE CASCADE,
+	sroom        INT,
+	m1_past      INT, 
+	m2_next      INT, 
+	m3_response  INT, 
+	m4_weight    INT, 
+	m5_turn      INT
 
 );
 
 CREATE TABLE IF NOT EXISTS communication_aggregate(
-	day DATE,
-	am1 REAL
+	day          DATE,
+	room         INT,
+	m1_weight    INT,
+	m2_entropy   INT,
+	m3_varience  INT
+
 );
 
 

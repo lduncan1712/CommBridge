@@ -11,10 +11,10 @@ WITH super_participant_communications AS (
         sr.id AS super_room_id,
         COUNT(c.id) AS participant_communications
     FROM super_participant sp
-    JOIN participant p ON p.super_participant = sp.id
+    JOIN participant p ON p.sparticipant = sp.id
     JOIN communication c ON c.participant = p.id
     JOIN room r ON c.room = r.id
-    JOIN super_room sr ON r.super_room = sr.id
+    JOIN super_room sr ON r.sroom = sr.id
     GROUP BY sp.id, sp.name, sr.id
 ),
 
@@ -24,7 +24,7 @@ super_room_communications AS (
         sr.id AS super_room_id,
         COUNT(c.id) AS total_communications
     FROM super_room sr
-    JOIN room r ON r.super_room = sr.id
+    JOIN room r ON r.sroom = sr.id
     LEFT JOIN communication c ON c.room = r.id
     GROUP BY sr.id
 ),
@@ -54,7 +54,7 @@ WHERE NOT EXISTS (
     SELECT 1
     FROM participant p
     JOIN room_participation rp ON rp.participant = p.id 
-    WHERE p.super_participant = sp.id
+    WHERE p.sparticipant = sp.id
 );
 
 
