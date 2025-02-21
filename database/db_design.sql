@@ -102,10 +102,12 @@ CREATE TABLE IF NOT EXISTS communication(
 
 CREATE TABLE IF NOT EXISTS communication_aggregate(
 	day          DATE,
-	room         INT,
+	sroom         INT,
 	m1_weight    INT,
-	m2_entropy   INT,
-	m3_varience  INT
+	m2_entropy   REAL,
+	m3_entropy  REAL,
+	m4_varience  REAL,
+	m5_turn      REAL
 
 );
 

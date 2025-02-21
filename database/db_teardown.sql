@@ -20,3 +20,5 @@ DROP TABLE IF EXISTS communication_type;
 DROP TABLE IF EXISTS super_room;
 DROP TABLE IF EXISTS super_participant;
 DROP TABLE IF EXISTS platform;
+
+DROP TABLE IF EXISTS communication_aggregate;

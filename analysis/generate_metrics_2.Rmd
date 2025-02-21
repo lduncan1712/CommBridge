@@ -139,28 +139,20 @@ head(data,5)
 
 
 ```{r}
+library(dplyr)
+library(tidyr)
+library(purrr)
 
-communication_aggregate <- data |>
-  group_by(sroom,date) |>
+agg_data <- data |>
+  group_by(sroom, date) |>
   summarise(
-    
-    participation_entropy = compute_entropy(sparticipant, m4_weight),
-    response_entropy      = compute_entropy(sparticipant[-1], m3_response[-1]),
-    communication_density = var(m1_past, na.rm = TRUE),
-    
-    turn_size = sum(m4_weight)/n_distinct(m5_turn) ,
-    
-    
-    
-    
-    total = sum(m4_weight),
-    av_weight    = sum(m4_weight)/n(),
-    turns = n_distinct(m5_turn)
-    
-  )
-
-communication_aggregate
-
+    m1_weight = sum(m4_weight),
+    m2_entropy = compute_entropy(sparticipant, m4_weight),
+    m3_entropy = compute_entropy(sparticipant[-1], m3_response[-1]),
+    m4_varience = var(m1_past[-1],na.rm=TRUE),
+    m5_turn = sum(m4_weight)/n_distinct(m5_turn)
+  ) |> rename(day=date)
+agg_data
 ```
 
 
@@ -172,6 +164,7 @@ communication_aggregate
 #BRING UP DATA TO DATABASE
 ```{r}
 
+dbWriteTable(con, "communication_aggregate", agg_data, append = TRUE, row.names = FALSE)
 
 
 ```
