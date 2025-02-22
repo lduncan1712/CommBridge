@@ -33,6 +33,10 @@ SET start = (
 WHERE c1.start IS NULL;
 
 
+UPDATE communication
+SET day = DATE(start);
+
+
 
 
 

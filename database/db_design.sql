@@ -96,7 +96,9 @@ CREATE TABLE IF NOT EXISTS communication(
 	m2_next      INT, 
 	m3_response  INT, 
 	m4_weight    INT, 
-	m5_turn      INT
+	m5_turn      INT,
+
+	day DATE
 
 );
 

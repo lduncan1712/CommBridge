@@ -39,7 +39,7 @@ data <- dbGetQuery(con, "SELECT
                             m5_turn,
                             m1_past,
                             EXTRACT(EPOCH FROM start) as time,
-                            DATE(start) as date
+                            day
                          from 
                             communication
                          where 
@@ -48,7 +48,7 @@ data <- dbGetQuery(con, "SELECT
                          order by
                             sroom, start
                          ")
-print(head(data))
+print(data[data$sroom == 274,])
 
 ```
 
@@ -58,7 +58,7 @@ print(head(data))
 generate_clusters <- function(rows){
   
   #Grouping By Sequential Interaction
-  grouped <- aggregate(time ~ date + m5_turn,
+  grouped <- aggregate(time ~ day + m5_turn,
                        data = rows,
                        FUN = mean)
   
@@ -144,14 +144,14 @@ library(tidyr)
 library(purrr)
 
 agg_data <- data |>
-  group_by(sroom, date) |>
+  group_by(sroom, day) |>
   summarise(
     m1_weight = sum(m4_weight),
     m2_entropy = compute_entropy(sparticipant, m4_weight),
     m3_entropy = compute_entropy(sparticipant[-1], m3_response[-1]),
     m4_varience = var(m1_past[-1],na.rm=TRUE),
     m5_turn = sum(m4_weight)/n_distinct(m5_turn)
-  ) |> rename(day=date)
+  ) 
 agg_data
 ```
 
@@ -165,6 +165,10 @@ agg_data
 ```{r}
 
 dbWriteTable(con, "communication_aggregate", agg_data, append = TRUE, row.names = FALSE)
+```
+
+```{r}
+dbExecute(con, "UPDATE communication_aggregate SET day = DATE(day)")
 
 
 ```
