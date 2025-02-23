@@ -2,23 +2,7 @@
 
 ![PipeLine Visual](visuals/photos/pipeline.png)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### This python project serves to format and upload communication data from various platform and storage formats (iMessage, Instagram, Discord, Call Logs) into a consistent POSTGRESQL database structure designed for easy analysis in R, using a flexible Superclass template (4 sub templates includes)
 
 
 # CommsBridge (For Communication Analysis)
