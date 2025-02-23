@@ -5,7 +5,21 @@
 ![PipeLine Visual](visuals/photos/pipeline.png)
 
 
+## Setup
+1.  Place database credentials in "credentials/db_creds.json"
+2.  Place desired data in "data/" (nesting folders permitted)
+3.  Construct sub-template for data format if not already supported
+4.  (Optional) Place contacts in "credentials/personal_contact.json"
+5.  Create DB + Upload Data + Merge Contacts + Generate Metrics
+```
+setup\batch_upload.sh
+```
 
+## Analysis Metrics
+### Metrics Shown Below: ...
+![Metrics Visualized 1](visuals/photos/example_room_metrics.png)
+
+![Metrics Visualize 2](visuals/photos/example_room_weight.png)
 
 
 # CommsBridge (For Communication Analysis)
