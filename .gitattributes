@@ -3,3 +3,4 @@ github/fsharp-custom-action/** -linguist-vendored
 
 *.Rmd linguist-detectable
 *.sql linguist-detectable
+*.R linguist-detectable
