@@ -1,6 +1,6 @@
 # CommBridge (Communication Data Pipeline + Structural Analysis)
 
-![visuals/
+![PipeLine Visual](visuals/photos/pipeline.png)
 
 
 
