@@ -4,3 +4,5 @@ database/__pycache__
 setup/__pycache__
 multi_to_single_processing/__pycache__
 file_types/__pycache__
+
+analysis/generate_metrics_2.Rmd
