@@ -1,3 +1,24 @@
+# CommBridge (Communication Data Pipeline + Structural Analysis)
+
+![visuals/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # CommsBridge (For Communication Analysis)
